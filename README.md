@@ -8,12 +8,13 @@ A web application that classifies Bengali text into four categories of hate spee
 
 1. [Overview](#overview)
 2. [Project Structure](#project-structure)
-3. [Model Architecture](#model-architecture)
-4. [Files Uploaded to Hugging Face](#files-uploaded-to-hugging-face)
-5. [Why We Use Hugging Face](#why-we-use-hugging-face)
+3. [Exploratory Data Analysis](#exploratory-data-analysis)
+4. [Model Architecture](#model-architecture)
+5. [Hugging Face](#hugging-face)
 6. [Text Vectorization Process](#text-vectorization-process)
 7. [How the Backend Works](#how-the-backend-works)
 8. [System Architecture](#system-architecture)
+9. [Summary](#summary)
 
 
 ---
@@ -31,6 +32,82 @@ The system uses a LightGBM classifier trained on TF-IDF features extracted from 
 
 ---
 
+## Exploratory Data Analysis
+
+### Dataset Overview
+
+The model was trained on the Bengali Hate Speech v2.0 dataset. Before training, we performed comprehensive exploratory data analysis to understand the data characteristics and distribution.
+
+#### Dataset Statistics
+
+| Metric | Value |
+|--------|-------|
+| Total Samples | 5,698 |
+| Duplicate Texts | 0 |
+| Number of Classes | 4 |
+| Mean Character Count | 90.9 |
+| Mean Word Count | 15.9 |
+| Mean Word Length | 4.76 characters |
+| Character-Label Correlation (Pearson r) | 0.2518 |
+
+
+### Analysis Performed
+
+#### 1. Class Distribution Analysis
+
+We analyzed the distribution of samples across the four categories using bar charts and pie charts to identify any class imbalance. This helped us understand if certain types of hate speech were more prevalent in the dataset.
+
+**Finding**: The dataset showed some imbalance across classes, which we addressed during training using SMOTE (Synthetic Minority Over-sampling Technique) to ensure the model learns all categories equally well.
+
+#### 2. Text Length Analysis
+
+We examined both character count and word count distributions across all classes using histograms and box plots.
+
+**Key Observations**:
+- Texts are relatively short, averaging approximately 16 words per sample
+- Average character count is around 91 characters per sample
+- Text length varies across different hate speech categories
+- Some categories tend to have longer expressions than others
+
+#### 3. Average Word Length Analysis
+
+We computed the mean word length per category to detect vocabulary-level differences between hate speech types.
+
+**Finding**: Word length averages are similar across all classes (approximately 4.76 characters), indicating that morphological complexity is fairly uniform across different types of hate speech. This suggests that word length alone is not a distinguishing feature.
+
+#### 4. Top Bengali Words per Class
+
+We extracted the 20 most frequent Bengali words for each category using Unicode regex patterns. This analysis revealed category-specific vocabulary patterns.
+
+**Finding**: Each category has distinct high-frequency Bengali vocabulary, which confirms that lexical features (word choice) will be highly informative for classification. For example:
+- Political hate speech contains more party names and political terms
+- Religious hate speech includes more religion-specific vocabulary
+- Personal attacks use more direct insult words
+- Geopolitical hate speech references countries and borders
+
+#### 5. Text Length vs Label Correlation
+
+We created scatter plots to visualize the relationship between character count and label categories, calculating the Pearson correlation coefficient.
+
+**Finding**: The correlation between text length and label is weak (r = 0.2518), meaning text length alone is not a strong discriminator between hate speech categories. This indicates that the model needs to rely on content (words and patterns) rather than just length.
+
+#### 6. Duplicate Detection
+
+We checked for duplicate texts in the dataset to ensure data quality.
+
+**Finding**: Zero duplicate entries were found, confirming the dataset is clean and no deduplication was needed.
+
+### Impact on Model Design
+
+Based on these EDA findings, we designed our model with:
+
+- **TF-IDF Features**: To capture the distinct vocabulary patterns identified in each category
+- **Dual Vectorization**: Both word-level and character-level features to capture semantic meaning and spelling patterns
+- **SMOTE Balancing**: To address class imbalance and ensure fair representation
+- **LightGBM Classifier**: To handle the high-dimensional sparse features efficiently
+
+---
+
 ## Project Structure
 
 ```
@@ -38,6 +115,9 @@ bengali-hate-speech-classifier/
 ├── app.py                     # Flask backend application
 ├── templates/
 │   └── index.html             # Frontend UI
+├── charts                     # All project charts
+├── EDA_Summary.csv            # EDA results
+├── Model_Results.csv          # Result comparison of all models
 ├── requirements.txt           # Python dependencies
 ├── Dockerfile                 # Docker configuration
 ├── Procfile                   # Process configuration for deployment
@@ -67,7 +147,7 @@ The classification system uses the following components:
 
 ---
 
-## Files Uploaded to Hugging Face
+## Hugging Face
 
 We uploaded four essential files to Hugging Face Hub under the repository `nuri63/bengali-hate-classifier`:
 
@@ -402,5 +482,11 @@ function displayResult(data) {
 │  Subsequent requests use cached files                       │
 └─────────────────────────────────────────────────────────────┘
 ```
+---
+
+## Summary
+
+This Bengali Hate Speech Classifier represents a complete end-to-end machine learning solution for content moderation. Built on a foundation of 5,698 carefully analyzed Bengali text samples, the system employs a LightGBM classifier with 8,000 TF-IDF features to distinguish between four categories of hate speech: Geopolitical, Personal, Political, and Religious. Through comprehensive exploratory data analysis, we identified distinct vocabulary patterns across categories, leading to our dual vectorization approach that captures both word-level semantics and character-level spelling patterns. The model components are efficiently distributed via Hugging Face Hub, enabling seamless deployment and automatic caching. With a modern, minimalist web interface and Docker-based deployment on Railway, the application provides real-time hate speech classification accessible to users worldwide, serving as a practical tool for content moderation and social media safety.
 
 ---
+
